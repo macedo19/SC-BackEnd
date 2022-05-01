@@ -1,6 +1,7 @@
 const { DataTypes} = require ('sequelize')
 
 const db = require('../db/conn')
+const Cliente = require('./Cliente')
 
 // Tabela no banco
 const Sale = db.define('Sale', {

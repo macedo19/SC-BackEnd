@@ -1,185 +1,83 @@
 
 // Fazer requie das models a serem utilizadas
-const Tought = require('../models/Tought')
 const User = require('../models/User')
+
+const Cliente = require('../models/Cliente')
 
 // Operacao sequeliza
 const { Op} =require('sequelize')
+const { raw } = require('express')
 
-// Alterar nome da class
-module.exports = class ToughtsController{
 
-    // Metodo lista referencia
-    static async showToughts(req, res){
+// Adiciona cliente na base
+exports.createClient = async (req, res) => {
+    let {name, email, empresa} = ""
+    // Testes no Postamn ELSE.
+    if(JSON.stringify(req.body) != JSON.stringify({})){
+        name = req.body.name
+        email = req.body.email
+        empresa = req.body.empresa
+    }else{
+        name = req.query.name
+        email = req.query.email
+        empresa = req.query.empresa
 
-        let search = ''
+    }
 
-        // Campo de busca 
-        if(req.query.search){
-            search = req.query.search
-        }
+    const data = {
+        name : name,
+        email : email,
+        empresa : empresa
+    }
 
-        // Ordenacao
-        let order = 'DESC'
+    console.log(data)
+    try{
+        
+        const client = await Cliente.create(data)
 
-        if(req.query.order === 'old'){
-            order = 'ASC'
-        }else{
-            order = 'DESC'
-        }
+        res.status(200).json(client)
+    }catch(error){
+        console.log(error)
+    }
+}
 
-        // get toughts
-        const toughtsData = await Tought.findAll({
-            include: User, //relacionamento
-            where: {
-                title: {[Op.like]: `%${search}%`} //Operador like
-            },
-            order: [['createdAt', order]] //Ordenacao
+// Get Clientes
+exports.getAllClients = async (req, res) => {
+    const clients = await Cliente.findAll({raw: true})
+
+    res.status(200).json(clients)
+}
+
+// Update Cliente
+exports.updateClient = async (req, res) => {
+    let {name, email, empresa, clienteid} = ""
+
+    // Testes no Postamn ELSE.
+    if(JSON.stringify(req.body) != JSON.stringify({})){
+        name = req.body.name
+        email = req.body.email
+        empresa = req.body.empresa
+        clienteid = req.body.id
+    }else{
+        name = req.query.name
+        email = req.query.email
+        empresa = req.query.empresa
+        clienteid = req.query.id
+}
+
+    const data = {
+        name : name,
+        email: email,
+        empresa: empresa
+    }
+
+    try{
+        const clientUpdate = Cliente.update(data, {
+            where: {id : clienteid}
         })
 
-        // dados do array
-        const toughts = toughtsData.map((result) => result.get({plain: true}))//metodo plain junta os dois arrays
-
-        // Qtde de  results
-        let toughtsQty = toughts.length
-
-        // Qtde de toughts
-        if(toughts === 0){
-            toughtsQty =false
-        }
-
-        // Renderiza
-        res.render('toughts/home', {toughts, search, toughtsQty})
-    }
-
-    //Buscar por id referencia
-    static async dashboard(req, res){
-
-        // user id pela session
-        const userId = req.session.userid
-
-        // get dados
-        const user = await User.findOne({
-            where: {id: userId},
-            include: Tought, //relacionamento
-            plain: true // dados importantes
-        })
-
-        // Check se usuario existe
-        if(!user){
-            res.redirect('/login')
-        }
-
-        // function map trabalha com todos os itens do array
-        const toughts = user.Toughts.map((result) => result.dataValues) //aqui eu elimino todos os outros e digo que meu toughts recebe apenas o dataValues
-
-        //validação para tarefaas vazias
-        let emptyToughts = false
-
-        // Toughts vazio no banco
-        if(toughts.length === 0){
-            emptyToughts = true;
-        }
-    
-        // Renderiza
-        res.render('toughts/dashboard', {toughts, emptyToughts})
-    }
-
-    // Renderiza view referencia
-    static createToughts(req, res){
-        res.render('toughts/create')
-    }
-
-    //Insert referencia
-    static async createToughtsSave(req, res){
-
-        // get dados pensamentps
-       const tought = {
-           title: req.body.title,
-           UserId: req.session.userid
-       }
-
-       try{
-            //Save pensamento    
-            await Tought.create(tought)
-
-            // Mensagem de sucesso
-            req.flash('message', 'Pensamento criado com sucesso!')
-
-            // save session
-            req.session.save(() => {
-                res.redirect('/toughts/dashboard') //redireciona view
-            })
-        }catch(error){
-            console.log('Aconteceu um erro: ' + error)
-        }
-       
-    }
-
-    //Delete referencia
-    static async removeToughts(req, res){
-        // Get dados
-        const id = req.body.id
-        const userId = req.session.userid
-
-        try{
-
-            await Tought.destroy({where: {id: id, UserId: userId}}) //destroy pensamento
-
-            // Mensagem de sucesso
-            req.flash('message', 'Pensamento removido com sucesso!')
-
-            // Save session
-            req.session.save(() => {
-                res.redirect('/toughts/dashboard') // redireciona view
-            })
-
-        }catch(error){
-            console.log('Aconteceu um erro:' + error)
-        }
-      
-
-    }
-
-
-    // Metodo renderizar view referencia
-    static async updateToughts(req, res){
-        const id = req.params.id
-
-        //Get elemento
-        const tought = await Tought.findOne({where: {id: id}, raw: true}) 
-
-        //Renderiza view
-        res.render('toughts/edit', {tought})
-    }
-
-    // Metodo Update Referencia
-    static async updateToughtsSave(req, res){
-
-        // get id pelo body
-        const id = req.body.id
-
-        // Objeto tought
-        const tought = {
-            title: req.body.title
-        }
-
-        try{
-
-            // update tought
-            await Tought.update(tought, {where: {id : id}})
-
-            // Mensagem de sucesso
-            req.flash('message', 'Pensamento atualizado com sucesso!')
-    
-            // Save session
-            req.session.save(() => {
-                res.redirect('/toughts/dashboard') // redireciona view
-            })
-
-        }catch(error){
-            console.log('Ocorreu um erro: ' + error)
-        }
-     
+        res.status(200).json(clientUpdate)
+    }catch(error){
+        console.log(error)
     }
 }

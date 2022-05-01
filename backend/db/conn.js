@@ -2,7 +2,7 @@
 const {Sequelize} = require ('sequelize')
 
 // CONEXÃO COM O BANCO (banco, username, senha, host, dialeto é a linguagem)
-const sequelize = new Sequelize('projeto', 'root', 'positivo', {
+const sequelize = new Sequelize('projeto', 'root', '', {
     host: 'localhost',
     dialect: 'mysql'
 })

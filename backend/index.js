@@ -13,16 +13,22 @@ const conn = require('./db/conn')
 //Models
 const User = require('./models/User')
 const User_Sistem = require('./models/User_Sistem')
-const Estoque = require('./models/Estoque')
+const Permissions = require('./models/Permissions')
+const Estoque = require('./models/Stock')
 const Cliente = require('./models/Cliente')
-const Produto = require('./models/Produto')
+const Stock = require('./models/Stock')
 const Sale = require('./models/Sale')
+const Sale_Product = require('./models/Sale_Product')
+const Sale_Client = require('./models/Sale_Client')
 
 //Cors
 const cors = require("cors");
 
 // Routes
 const authRoutes = require('../backend/routes/authRoutes')
+const clienteRoutes = require('../backend/routes/clienteRoutes')
+const produtoRoutes = require('../backend/routes/produtoRoutes')
+const saleRoutes = require('../backend/routes/saleRoutes')
 
 // Controllers
 
@@ -76,10 +82,15 @@ app.use((req, res, next) => {
     next()
 })
 
+
+
 // Routes
 app.use('/', authRoutes)
+app.use('/clientes/', clienteRoutes)
+app.use('/produtos/', produtoRoutes)
+app.use('/vendas/', saleRoutes)
 
-// Sincronização com banco
+// // Sincronização com banco
 conn.sync().then(()=> {
     app.listen(3000)
 }).catch((err) => console.log(err))

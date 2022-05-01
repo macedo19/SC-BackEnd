@@ -3,19 +3,12 @@ const Produto = require('./Produto')
 const db = require('../db/conn')
 
 // Tabela no banco
-const Estoque = db.define('Estoque', {
+const Stock = db.define('Stock', {
     nota_servico: {
         type: DataTypes.STRING,//tipo string
         require: true//Não aceita valores vazios
     },
-    idProduto: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references:{model: 'Produto', key: 'id'},
-        onUpdate:'CASCADE',
-        onDelete:'CASCADE'
-    
-    },
+
     quantidade: {
         type: DataTypes.INTEGER,//tipo string
         require: true//Não aceita valores vazios
@@ -31,14 +24,17 @@ const Estoque = db.define('Estoque', {
     
 })
 
-// RELACIONAMENTO 
-// ---------------------------------------------------
-// Um pensamento esta relacionado a um usuário
-Produto.belongsTo(Estoque)
 
-// Um Usuari tem muitos pensamentos
-Estoque.hasMany(Produto)
-// Exports module
-module.exports = Estoque
+// // RELACIONAMENTO 
+// // ---------------------------------------------------
+// // Um pensamento esta relacionado a um usuário
+Stock.belongsTo(Produto, {foreignKey: 'id'})
+
+// // Um Usuari tem muitos pensamentos
+Produto.hasMany(Stock,{ foreignKey: 'produtoId'})
+
+// Estoque.hasMany(Produto)
+// // Exports module
+module.exports = Stock
 
 // https://medium.com/@eth3rnit3/sequelize-relationships-ultimate-guide-f26801a75554
